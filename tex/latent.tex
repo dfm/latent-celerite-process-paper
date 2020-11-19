@@ -1,0 +1,149 @@
+% The layout of this document has been shamelessly stolen from the MIT licensed project:
+% https://github.com/davidwhogg/GaussianProductRefactor
+% by David W. Hogg, Adrian Price-Whelan, and Boris Leistedt
+
+\documentclass[10pt]{article}
+
+\usepackage{amsmath, bm, mathrsfs, amssymb}
+\usepackage[dvipsnames]{xcolor}
+\usepackage[hidelinks,
+            colorlinks=true,
+            linkcolor=NavyBlue,
+            citecolor=darkgray,
+            urlcolor=NavyBlue]{hyperref}
+\usepackage{pifont}
+\usepackage{graphicx}
+\usepackage{doi}
+
+\usepackage{natbib}
+\bibliographystyle{dfm_abbrvnat}
+\setcitestyle{round,citesep={,},aysep={}}
+
+% text stuhh
+\newcommand{\documentname}{\textsl{Note}}
+\newcommand{\sectionname}{Section}
+\newcommand{\equationname}{equation}
+\newcommand{\notename}{Note}
+\renewcommand{\tablename}{Table}
+\newcommand{\acronym}[1]{{\small{#1}}}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\foreign}[1]{\textsl{#1}}
+\newcommand{\etal}{\foreign{et~al.}}
+
+% math stuhh
+\newcommand{\hquad}{~~}
+\newcommand{\given}{\,|\,}
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\T}{^{\!\mathsf{T}\!}}
+\newcommand{\inv}{^{-1}}
+\newcommand{\scalar}[1]{#1}
+\renewcommand{\vector}[1]{\boldsymbol{#1}}
+\newcommand{\tensor}[1]{\mathbf{#1}}
+\renewcommand{\matrix}[1]{\mathsf{#1}}
+\newcommand{\normal}{\mathcal{N}\!\,}
+
+% variables
+\newcommand{\celerite}{\code{celerite}}
+
+% Journal keys - kill me now
+\newcommand{\aj}{Astron.\,J.}
+\newcommand{\apj}{Astrophys.\,J.} % Astrophysical Journal
+\newcommand{\apjs}{Astrophys.\,J.\,Supp.\,Ser.} % Astrophysical Journal Supplements
+
+% page layout stuff
+\setlength{\topmargin}{0.0in}
+\setlength{\headheight}{0.0in}
+\setlength{\headsep}{0.0in}
+\setlength{\parindent}{\baselineskip}
+\setlength{\textwidth}{4.3in}
+\setlength{\textheight}{2\textwidth}
+\raggedbottom\sloppy\sloppypar\frenchspacing
+
+% this might be crazy, but here's my number
+\setlength{\marginparsep}{0.15in}
+\setlength{\marginparwidth}{2.7in}
+\usepackage{marginfix} % necessary but possibly evil
+\newcounter{marginnote}
+\setcounter{marginnote}{0}
+\renewcommand{\footnote}[1]{\refstepcounter{marginnote}\textsuperscript{\themarginnote}\marginpar{\color{darkgray}\raggedright\footnotesize\textsuperscript{\themarginnote}#1}}
+\newcommand{\tfigurerule}{\rule{0pt}{1ex}\\ \rule{\marginparwidth}{0.5pt}\\ \rule{0pt}{0.25ex}}
+\newcommand{\bfigurerule}{\rule{0pt}{0.25ex}\\ \rule{\marginparwidth}{0.5pt}\\ \rule{0pt}{1ex}}
+\renewcommand{\caption}[1]{\parbox{\marginparwidth}{\footnotesize\refstepcounter{figure}\textbf{\figurename~\thefigure}: {#1}}}
+
+% and make the left margin correct
+\setlength{\oddsidemargin}{0.5\paperwidth}
+\addtolength{\oddsidemargin}{-1.0in}
+\addtolength{\oddsidemargin}{-0.5\textwidth}
+\addtolength{\oddsidemargin}{-0.5\marginparwidth}
+\addtolength{\oddsidemargin}{-0.5\marginparsep}
+
+\begin{document}
+
+\section*{Fast \& scalable latent Gaussian processes for multivariate time-domain astronomy}
+
+\noindent\textbf{Daniel Foreman-Mackey}\footnote{%
+  The authors would like to thank the Astronomical Data Group at Flatiron for listening to every iteration of this project and for providing great feedback every step of the way.
+  We would also like to thank
+  Suzanne Aigrain (Oxford),
+  Gregory Guida (Etsy),
+  Christopher Stumm (Etsy),
+  \emph{and others\ldots}
+  for insightful conversations and other contributions.\\\vspace{1em}
+  The methods described here are available as part of the \href{https://github.com/exoplanet-dev/celerite2}{\code{exoplanet-dev/celerite2} project on GitHub} (CITE ZENODO) and the code used to make the figures for this paper are available as part of the \href{https://github.com/dfm/latent-celerite-process-paper}{\code{dfm/latent-celerite-process-paper} project on GitHub} (CITE ZENODO).
+}\\
+{\footnotesize%
+\textsl{Center for Computational Astrophysics, Flatiron Institute, New York, NY, USA}%
+}
+
+\medskip\noindent\textbf{Tyler Gordon}\\
+{\footnotesize%
+\textsl{Department of Astronomy, University of Washington, Seattle, WA, USA}%
+}
+
+\medskip\noindent\textbf{Eric Agol}\\
+{\footnotesize%
+\textsl{Department of Astronomy, University of Washington, Seattle, WA, USA}%
+}
+
+\medskip\noindent\textbf{Megan Bedell}\\
+{\footnotesize%
+\textsl{Center for Computational Astrophysics, Flatiron Institute, New York, NY, USA}%
+}
+
+\medskip\noindent\textbf{Final author list and order TBD}\\
+{\footnotesize%
+\textsl{Affiliations}\\
+\textsl{More affiliations}%
+}
+
+\paragraph{Abstract:}
+
+% Probably better to re-write focusing more on the latent models instead of story time.
+
+Univariate Gaussian process models have become a staple in the time-domain astronomy toolkit, driven in large part by computationally efficient methods that use fast linear algebra for structured matrices or state-space representation and Kalman filters.
+In particular, the \emph{celerite} method \citep{foreman-mackey2017} has now been widely used, especially in the context of light curve modeling for single band surveys like Kepler, K2, and TESS.
+This method was recently generalized to applications like transit spectroscopy where multiple bands are observed at all times \citep{gordon2020}.
+In this paper, we further generalize to a broader range of research areas by adding support for observations in different bands at different times.
+This can be interpreted as a model where there are a set of underlying (latent) Gaussian processes and the observations are generated as linear combinations of these latent processes.
+The applications of this method include---but are not limited to---transient and stellar astrophysics with surveys like Rubin/LSST, models for stellar and systematic variability in extreme precision radial velocity experiments, reverberation mapping, and pulsar timing.
+
+\section{Introduction}
+
+A paper. \citep{foreman-mackey2017,foreman-mackey2018,gordon2020}
+
+\citep{loper2020,hu2020}
+
+% \marginpar{\tfigurerule\\
+%   \includegraphics[width=\marginparwidth, trim=0ex 0ex 0ex 0.5in, clip]{oned.pdf}
+%   \caption{The one-dimensional case: If the prior pdf and the likelihood are both
+%     Gaussian in a single parameter, their product (and hence the posterior pdf) is
+%     also Gaussian, with a narrower width (smaller variance) than
+%     either the prior pdf or the likelihood.\label{fig:oned}}\\
+%   \bfigurerule}
+
+
+% Render the references
+\clearpage\raggedright
+\bibliography{refs}
+
+\end{document}
