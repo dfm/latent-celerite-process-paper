@@ -79,7 +79,7 @@
 
 \begin{document}
 
-\section*{Properties of semi-separable matrices \& their application to scalable Gaussian Processes\footnote{%
+\section*{Fast \& scalable computations with rank-$R$ semi-separable matrices\footnote{%
     The methods described here are available as part of the \href{https://github.com/exoplanet-dev/celerite2}{\code{exoplanet-dev/celerite2} project on GitHub} (CITE ZENODO) and the code used to make the figures for this paper are available as part of the \href{https://github.com/dfm/latent-celerite-process-paper}{\code{dfm/latent-celerite-process-paper} project on GitHub} (CITE ZENODO).}}
 
 \noindent\textbf{Daniel Foreman-Mackey}\footnote{%
@@ -95,21 +95,6 @@
 \textsl{Center for Computational Astrophysics, Flatiron Institute, New York, NY, USA}%
 }
 
-\medskip\noindent\textbf{Tyler Gordon}\\
-{\footnotesize%
-\textsl{Department of Astronomy, University of Washington, Seattle, WA, USA}%
-}
-
-\medskip\noindent\textbf{Eric Agol}\\
-{\footnotesize%
-\textsl{Department of Astronomy, University of Washington, Seattle, WA, USA}%
-}
-
-\medskip\noindent\textbf{Megan Bedell}\\
-{\footnotesize%
-\textsl{Center for Computational Astrophysics, Flatiron Institute, New York, NY, USA}%
-}
-
 \medskip\noindent\textbf{Final author list and order TBD}\\
 {\footnotesize%
 \textsl{Affiliations}\\
@@ -120,12 +105,9 @@
 
 % Probably better to re-write focusing more on the latent models instead of story time.
 
-Univariate Gaussian process models have become a staple in the time-domain astronomy toolkit, driven in large part by computationally efficient methods that use fast linear algebra for structured matrices or state-space representation and Kalman filters.
-In particular, the \emph{celerite} method \citep{foreman-mackey2017} has now been widely used, especially in the context of light curve modeling for single band surveys like Kepler, K2, and TESS.
-This method was recently generalized to applications like transit spectroscopy where multiple bands are observed at all times \citep{gordon2020}.
-In this paper, we further generalize to a broader range of research areas by adding support for observations in different bands at different times.
-This can be interpreted as a model where there are a set of underlying (latent) Gaussian processes and the observations are generated as linear combinations of these latent processes.
-The applications of this method include---but are not limited to---transient and stellar astrophysics with surveys like Rubin/LSST, models for stellar and systematic variability in extreme precision radial velocity experiments, reverberation mapping, and pulsar timing.
+Matrices with semi-separable structure are at the core of some modern Gaussian Process algorithms and they allow efficient operations that are scalable in terms of computational cost and memory use.
+In this note, we discuss efficient implementation of the standard matrix operations on semi-separable matrices and the forward- and reverse- mode automatic differentiation algorithms.
+We also discuss the relationship with Kalman filtering methods for Gaussian Process regression.
 
 \section{Introduction}
 
@@ -156,48 +138,6 @@ We will also derive the forward- and reverse-mode differentiation rules for thes
 A paper. \citep{foreman-mackey2017,foreman-mackey2018,gordon2020}
 
 \citep{loper2020,hu2020}
-
-\section{Background}
-
-\subsection{Terminology}
-
-For clarity of terminology, throughout this paper we will refer to our Gaussian Process models as generating observations at a set of ``times'' in different ``bands''.
-This terminology is useful, but it doesn't capture the full range of models where these methods are applicable.
-
-\subsection{Univariate \& Kronecker celerite processes}
-
-\subsection{Backpropagation \& automatic differentiation}
-
-\subsection{Other stochastic models for multivariate time series}
-
-\section{Details}
-
-One way of interpreting the Kronecker product model from above is as a latent process model, and this interpretation is especially useful in the context to implement missing data, and other generalizations.
-To give an intuition for this interpretation, let's start with the simplest scaled model from above where the observations in each band.
-
-\subsection{Generative process}
-
-\subsection{The math}
-
-\subsection{The algorithm}
-
-\subsection{Implementation details}
-
-\section{Examples}
-
-\subsection{Modeling recommendations}
-
-\subsection{Photometric time series from Rubin}
-
-\subsection{Transient science with Rubin}
-
-\subsection{Stellar variability in extreme precision radial velocity}
-
-\subsection{Reverberation mapping}
-
-\section{Discussion}
-
-
 
 
 % \marginpar{\tfigurerule\\

@@ -275,3 +275,4 @@ TSWLatexianTemp*
 # Makeindex log files
 *.lpz
 latent.pdf
+tex/semisep.pdf
