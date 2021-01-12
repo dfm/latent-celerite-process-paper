@@ -4,7 +4,8 @@
 
 \documentclass[10pt]{article}
 
-\usepackage{amsmath, bm, mathrsfs, amssymb}
+\usepackage{amsmath, bm, mathrsfs, amssymb,algorithm,algorithmicx}
+\usepackage[noend]{algpseudocode}
 \usepackage[dvipsnames]{xcolor}
 \usepackage[hidelinks,
             colorlinks=true,
@@ -138,6 +139,77 @@ We will also derive the forward- and reverse-mode differentiation rules for thes
 A paper. \citep{foreman-mackey2017,foreman-mackey2018,gordon2020}
 
 \citep{loper2020,hu2020}
+
+\section{Inclusive scan algorithm}
+
+It turns out that we can re-write all of the standard operations on semi-separable matrices as inclusive scans with associate binary operators.
+This is beneficial because there are well defined methods for parallelizing such algorithms and it will allow efficient parallel implementations on the GPU.
+
+An ``inclusive scan'' or ``prefix sum'' operation for a sequence
+\begin{eqnarray}
+  (a_1,\, a_2,\, a_3,\, \ldots)
+\end{eqnarray}
+and binary operator $\otimes$ is defined as
+\begin{eqnarray}
+  (a_1,\, a_1 \otimes a_2,\, a_1 \otimes a_2 \otimes a_3,\, \ldots)\quad.
+\end{eqnarray}
+For example, if the operator is addition, then we would get the cumulative sum: each element becomes the sum of all earlier entries.
+
+For semi-separable matrices, all of the operations can be written as inclusive scans like this.
+
+\paragraph{Matrix multiply}
+The algorithm for performing a lower triangular matrix multiply is listed in Figure~\ref{alg:tril-mat-mul}.
+This can be rewritten as a scan operation where the state is
+\begin{eqnarray}
+  a_n &=& \left(\begin{array}{c}
+    P_n \\
+    P_n\,v_n\,{y_n}\T
+  \end{array}\right)
+\end{eqnarray}
+and the binary operation $\otimes$ is defined as
+\begin{eqnarray}
+  a_n \otimes a_m &=& \left(\begin{array}{c}
+    P_m\,P_n \\
+    P_m\,P_n\,v_n\,{y_n}\T + P_m\,v_m\,{y_m}\T
+  \end{array}\right) \quad.
+\end{eqnarray}
+We can demonstrate that this is an associative operation by demonstrating that
+\begin{eqnarray}
+  (a_n \otimes a_m) \otimes a_k &=& a_n \otimes (a_m \otimes a_k) \quad.
+\end{eqnarray}
+
+
+\begin{algorithm}
+  \caption{Lower triangular matrix multiply\label{alg:tril-mat-mul}}
+  \begin{algorithmic}[1]
+    \Require{$P_n \in \mathbb{R}^{J \times J}$, $u_n \in \mathbb{R}^{J}$, $v_n \in \mathbb{R}^{J}$, and $y_n \in \mathbb{R}^{M}$}
+    \Function{TrilMatMul}{$\{P_n,\, u_n,\, v_n,\, y_n\}_{n=1}^{N}$}
+    \State{$F_1 \gets 0$} \Comment{$F_n \in \mathbb{R}^{J \times M}$}
+    \State{$z_1 \gets 0$} \Comment{$z_n \in \mathbb{R}^{M}$}
+    \For{$n \gets 2 \textrm{ to } N$}
+    \State{$F_n \gets P_{n-1}\,\left(F_{n-1}+{v_{n-1}}\,{y_{n-1}}\T\right)$}
+    \State{$z_n \gets {u_n}\T\,F_n$}
+    \EndFor
+    \State \Return{$Z$}
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+  \caption{Lower triangular matrix solve\label{alg:tril-mat-mul}}
+  \begin{algorithmic}[1]
+    \Require{$P_n \in \mathbb{R}^{J \times J}$, $u_n \in \mathbb{R}^{J}$, $v_n \in \mathbb{R}^{J}$, and $y_n \in \mathbb{R}^{M}$}
+    \Function{TrilSolve}{$\{P_n,\, u_n,\, v_n,\, y_n\}_{n=1}^{N}$}
+    \State{$F_1 \gets 0$} \Comment{$F_n \in \mathbb{R}^{J \times M}$}
+    \State{$z_1 \gets y_n$} \Comment{$z_n \in \mathbb{R}^{M}$}
+    \For{$n \gets 2 \textrm{ to } N$}
+    \State{$F_n \gets P_{n-1}\,\left(F_{n-1}+{v_{n-1}}\,{z_{n-1}}\T\right)$}
+    \State{$z_n \gets y_n - {u_n}\T\,F_n$}
+    \EndFor
+    \State \Return{$Z$}
+    \EndFunction
+  \end{algorithmic}
+\end{algorithm}
 
 
 % \marginpar{\tfigurerule\\
